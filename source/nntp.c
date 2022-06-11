@@ -124,7 +124,7 @@ nntpgroups nntp_get_groups(nntpcon con){
 	pfd[0].events = POLLIN;
 	printf("Polling\n");
 	
-	while ((last_read_size = recv(con.socketfd, buf, read_size, MSG_DONTWAIT)) != 0){
+	while ((last_read_size = recv(con.socketfd, buf, read_size, MSG_DONTWAIT)) < read_size){
 		if (last_read_size == -1){
 			if (errno == 11) continue;
 			printf("Read error %d\n", errno);
