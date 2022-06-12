@@ -117,10 +117,11 @@ nntpgroups nntp_get_groups(nntpcon con){
 	char *working = malloc(workingsize);
 	u32 wpos = 0;
 	
-	u32 bufsize = sizeof(char) * 65534;
+	u64 bufsize = sizeof(char) * 65534;
 	u32 bufinit = bufsize;
 	char *buf = malloc(bufsize);
 	u32 bufpos = 0;
+	char *last_buf;
 	
 	u32 groupsize = sizeof(char*) * 65534;
 	u16 grouppos = 0;
@@ -148,8 +149,8 @@ nntpgroups nntp_get_groups(nntpcon con){
 			return out;
 		}
 		
-		memset(working, 0, workingsize);
-		recv_res = recv(con.socketfd, working, workingsize - 1, 0);
+		//memset(working, 0, (workingsize - 1));
+		recv_res = recv(con.socketfd, working, (workingsize - 1), 0);
 		if (recv_res == -1){
 			printf("Read error\n");
 			out.groups = NULL;
@@ -158,8 +159,23 @@ nntpgroups nntp_get_groups(nntpcon con){
 			return out;
 		}
 		
+		/*if (recv_res > workingsize){
+		}*/
+		
 		working[recv_res] = '\0';
-		buf = strcat(buf, working);
+		if ((bufsize + recv_res) >= bufsize) {
+			last_buf = buf;
+			buf = realloc(buf, bufsize + recv_res);
+			if (buf == NULL){
+				out.err = NNTPERR_ALLOC;
+				free(working);
+				free(last_buf);
+				return out;
+			}
+			bufsize += recv_res;
+		}
+		
+		strcat(buf, working);
 		
 		bufpos += recv_res;
 	}
