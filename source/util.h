@@ -20,4 +20,6 @@ typedef struct {
 
 splitres util_split_by_newline(char*);
 
+char *rtrim(char*, const char*);
+
 #endif

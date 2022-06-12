@@ -86,9 +86,6 @@ splitres util_split_by_newline(char *in){
 
 
 
-
-
-
 /*
 splitres util_split_by_newline(char *in){
 	int insize = strlen(in);

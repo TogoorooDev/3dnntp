@@ -27,7 +27,7 @@ typedef struct{
 } nntpres;
 
 typedef struct {
-	u16 len;
+	u32 len;
 	char **groups;
 	char *lgroup;
 	u8 err;

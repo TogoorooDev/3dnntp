@@ -17,7 +17,7 @@
 #include <3ds.h>
 
 #include "nntp.h"
-#include "util.h"
+//#include "util.h"
 
 nntpcon nntpinit(char *server, u16 port){
 	struct sockaddr_in addr;
@@ -76,7 +76,7 @@ nntpcon nntpinit(char *server, u16 port){
 	
 }
 
-// nntpres nntp_custom_command(char *msg, nntpcon con){
+/* nntpres nntp_custom_command(char *msg, nntpcon con){
 	// nntpres out;
 	// out.err = NNTPERR_UNKNOWN;
 	// out.contents = NULL;
@@ -104,7 +104,7 @@ nntpcon nntpinit(char *server, u16 port){
 	// out.err = NNTPERR_OK;
 	// return out;
 	
-// }
+// } */
 
 nntpgroups nntp_get_groups(nntpcon con){
 	nntpgroups out;
@@ -123,8 +123,11 @@ nntpgroups nntp_get_groups(nntpcon con){
 	u32 bufpos = 0;
 	char *last_buf;
 	
+	u64 backup_buf_size;
+	char *backup_buf;
+	
 	u32 groupsize = sizeof(char*) * 65534;
-	u16 grouppos = 0;
+	u32 grouppos = 0;
 	
 	int recv_res = 0;
 	
@@ -159,9 +162,6 @@ nntpgroups nntp_get_groups(nntpcon con){
 			return out;
 		}
 		
-		/*if (recv_res > workingsize){
-		}*/
-		
 		working[recv_res] = '\0';
 		if ((bufsize + recv_res) >= bufsize) {
 			last_buf = buf;
@@ -172,25 +172,68 @@ nntpgroups nntp_get_groups(nntpcon con){
 				free(last_buf);
 				return out;
 			}
-			bufsize += recv_res;
+			bufsize += recv_res + 1;
+			printf("bufsize: %lld\n", bufsize);
+			
 		}
 		
-		strcat(buf, working);
+		printf("recv: %d\n", recv_res);
+		
+		strcat(buf, working);	
 		
 		bufpos += recv_res;
 	}
 	
 	printf("Got\n");
+	sleep(2);
 	//free(working);
-	memset(working, 0, workingsize);
+	//memset(working, 0, strlen(working));
+	buf[bufpos] = '\0';
+	backup_buf = malloc(bufsize + 1);
+	backup_buf_size = bufsize;
 	
+	wpos = 0;
+	
+	strncpy(backup_buf, buf, backup_buf_size);
+	//backup_buf[backup_buf_size - 1] = '\0';
+	out.len = 0;
+	u32 endpos;
+	last_buf = malloc(bufsize);
+	while ((endpos = strcspn(buf, "\n")) != strlen(buf)){
+		
+		strncpy(working, buf, workingsize);
+		printf("Copied buf to working\n");
+		sleep(3);
+		working[endpos - 1] = '\0';
+		printf("Modified working\n");
+		sleep(3);
+		u16 spacepos;
+		strncpy(out.groups[out.len], working, workingsize);
+		printf("Copied working to groups\n");
+		sleep(3);
+		/*if ((spacepos = strcspn(working, " ")) != strlen(working)){
+			out.len++;
+			working[spacepos] = '\0';
+			strcpy(out.groups[out.len - 1], working);
+			continue;
+		}*/
+		
+		
+		last_buf = buf;
+		buf = memmove(buf, buf + endpos, bufsize - endpos);
+		printf("Resized buf\n");
+		sleep(3);
+	}
+	
+	/*
 	for (u32 i = 0; i < bufpos; i++){
-		printf("a");
-		fflush(stdout);
+		printf("wpos: %ld\ni: %ld\n", wpos, i);
+
+		//sleep(1);
 		if (buf[i] == '\n'){
+			sleep(1);
 			working[++wpos] = '\0';
-			printf("b");
-			fflush(stdout);
+			//fflush(stdout);
 			//out.groups = malloc(sizeof(char*));
 			out.groups[grouppos] = malloc(workingsize);
 			if (out.groups[grouppos] == NULL){
@@ -203,67 +246,21 @@ nntpgroups nntp_get_groups(nntpcon con){
 			grouppos++;
 			wpos = 0;
 			strcpy(out.groups[grouppos], working);
-			printf("c");
-			fflush(stdout);
+
 			//out.groups[linepos] = realloc(out.groups[linepos], bufpos);
-			memset(working, 0, workingsize);
-			printf("d");
-			fflush(stdout);
-			/*if (out.len % 1 == 0) {
+			//memset(working, 0, workingsize);
+			
+			if (out.len % 75 == 0) {
 				printf(".");
 				fflush(stdout);
-			//}*/
+			}
 			
 			printf("\n");
 			continue;
 		}
 		
 		working[wpos++] = buf[i];
-	}
-	
-	/*
-	// do this over 
-	while ((pollres = poll(watchlist, 1, 5000)) != 0){
-		if (pollres == -1){
-			printf("Poll error\n");
-			out.err = NNTPERR_POLL;
-			out.groups = NULL;
-			return out;
-		}
-		if ((recv_res = recv(con.socketfd, temp, 1, 0)) != 0){
-			if (recv_res == -1){
-				printf("Read error\n");
-				out.groups = NULL;
-				out.err = NNTPERR_READ;
-				out.errcode = errno;
-				return out;
-			}
-			
-			if (temp[0] == '\n') {
-				buf[++bufpos] = '\0';
-				//out.groups = malloc(sizeof(char*));
-				out.groups[grouppos] = malloc(bufsize);
-				out.len++;
-				grouppos++;
-				bufpos = 0;
-				//out.groups[linepos] = realloc(out.groups[linepos], bufpos);
-				memset(buf, 0, bufsize);
-				if (out.len % 75 == 0) {
-					printf(".");
-					fflush(stdout);
-				}
-				continue;
-			}
-			
-			//printf("%c\n", temp[0]);
-
-			buf[bufpos] = temp[0];
-			bufpos++;
-		}	
-	}
-
-	free(temp);
-	*/
+	}*/
 	
 	free(buf);
 	free(working);

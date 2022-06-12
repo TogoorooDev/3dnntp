@@ -1,5 +1,7 @@
 //#include <citro2d.h>
 
+/* Integer is 16 bit */
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -93,6 +95,8 @@ int main(){
 				printf("Error: %d\n", groups.err);
 				if (groups.err == NNTPERR_READ) printf("Errno: %d\n", groups.errcode);
 			}
+			
+			printf("Found %ld groups\n", groups.len);
 			
 			sleep(1);
 			if (groups.groups != NULL){
