@@ -96,8 +96,8 @@ int main(){
 			
 			sleep(1);
 			if (groups.groups != NULL){
-				if (groups.groups[0] != NULL){
-					free(groups.groups[0]);
+				for(u32 i = 0; i < groups.len; i++){
+					if (groups.groups[i] != NULL) free(groups.groups[i]);
 				}
 				free(groups.groups);
 			}

@@ -111,11 +111,22 @@ nntpgroups nntp_get_groups(nntpcon con){
 	out.err = NNTPERR_UNKNOWN;
 	out.groups = NULL;
 	out.len = 0;
-	char *buf = calloc(65535, sizeof(char));
-	u16 bufpos = 0;
-	u16 linepos = 0;
-	char *temp = calloc(2, sizeof(char));
+	
+	u32 workingsize = sizeof(char) * 65534;
+	u32 workinginit = workingsize;
+	char *working = malloc(workingsize);
+	u32 wpos = 0;
+	
+	u32 bufsize = sizeof(char) * 65534;
+	u32 bufinit = bufsize;
+	char *buf = malloc(bufsize);
+	u32 bufpos = 0;
+	
+	u32 groupsize = sizeof(char*) * 65534;
+	u16 grouppos = 0;
+	
 	int recv_res = 0;
+	
 	int pollres;
 	struct pollfd watchlist[1];
 	watchlist[0].fd = con.socketfd;
@@ -127,6 +138,75 @@ nntpgroups nntp_get_groups(nntpcon con){
 	
 	fcntl(con.socketfd, F_SETFL, fcntl(con.socketfd, F_GETFL, 0) | O_NONBLOCK);
 	
+	out.groups = malloc(groupsize);
+	
+	while ((pollres = poll(watchlist, 1, 5000)) != 0){
+		if (pollres == -1){
+			printf("Poll error\n");
+			out.err = NNTPERR_POLL;
+			out.groups = NULL;
+			return out;
+		}
+		
+		memset(working, 0, workingsize);
+		recv_res = recv(con.socketfd, working, workingsize - 1, 0);
+		if (recv_res == -1){
+			printf("Read error\n");
+			out.groups = NULL;
+			out.err = NNTPERR_READ;
+			out.errcode = errno;
+			return out;
+		}
+		
+		working[recv_res] = '\0';
+		buf = strcat(buf, working);
+		
+		bufpos += recv_res;
+	}
+	
+	printf("Got\n");
+	//free(working);
+	memset(working, 0, workingsize);
+	
+	for (u32 i = 0; i < bufpos; i++){
+		printf("a");
+		fflush(stdout);
+		if (buf[i] == '\n'){
+			working[++wpos] = '\0';
+			printf("b");
+			fflush(stdout);
+			//out.groups = malloc(sizeof(char*));
+			out.groups[grouppos] = malloc(workingsize);
+			if (out.groups[grouppos] == NULL){
+				out.err = NNTPERR_ALLOC;
+				free(buf);
+				free(working);
+				return out;
+			}
+			out.len++;
+			grouppos++;
+			wpos = 0;
+			strcpy(out.groups[grouppos], working);
+			printf("c");
+			fflush(stdout);
+			//out.groups[linepos] = realloc(out.groups[linepos], bufpos);
+			memset(working, 0, workingsize);
+			printf("d");
+			fflush(stdout);
+			/*if (out.len % 1 == 0) {
+				printf(".");
+				fflush(stdout);
+			//}*/
+			
+			printf("\n");
+			continue;
+		}
+		
+		working[wpos++] = buf[i];
+	}
+	
+	/*
+	// do this over 
 	while ((pollres = poll(watchlist, 1, 5000)) != 0){
 		if (pollres == -1){
 			printf("Poll error\n");
@@ -145,17 +225,21 @@ nntpgroups nntp_get_groups(nntpcon con){
 			
 			if (temp[0] == '\n') {
 				buf[++bufpos] = '\0';
-				out.groups = malloc(sizeof(char*));
-				out.groups[linepos] = malloc(sizeof(char) * 65535);
+				//out.groups = malloc(sizeof(char*));
+				out.groups[grouppos] = malloc(bufsize);
 				out.len++;
-				linepos++;
+				grouppos++;
 				bufpos = 0;
 				//out.groups[linepos] = realloc(out.groups[linepos], bufpos);
-				memset(buf, 0, sizeof(char) * 65535);
+				memset(buf, 0, bufsize);
+				if (out.len % 75 == 0) {
+					printf(".");
+					fflush(stdout);
+				}
 				continue;
 			}
 			
-			printf("%c\n", temp[0]);
+			//printf("%c\n", temp[0]);
 
 			buf[bufpos] = temp[0];
 			bufpos++;
@@ -163,7 +247,10 @@ nntpgroups nntp_get_groups(nntpcon con){
 	}
 
 	free(temp);
+	*/
+	
 	free(buf);
+	free(working);
 	out.err = NNTPERR_OK;
 	return out;
 }
