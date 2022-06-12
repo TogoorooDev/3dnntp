@@ -31,7 +31,7 @@ int main(){
 
 	gfxInitDefault();
 	// Register gfxExit() and socExit() to be run when app quits
-	//atexit(gfxExit);
+	atexit(gfxExit);
 	
 	PrintConsole topScreen, bottomScreen;
 
@@ -74,7 +74,7 @@ int main(){
 	printf("Socket API Initialized\n");
 	
 	// atexit() runs things in reverse order so this will be run before gfxExit()
-	//atexit(socExitWrapper);
+	atexit(socExitWrapper);
 	
 	nntpcon con = nntpinit("nntp.aioe.org", 119);
 	if (con.err != NNTPERR_OK){
@@ -91,8 +91,17 @@ int main(){
 			nntpgroups groups = nntp_get_groups(con);
 			if (groups.err != NNTPERR_OK){
 				printf("Error: %d\n", groups.err);
+				if (groups.err == NNTPERR_READ) printf("Errno: %d\n", groups.errcode);
 			}
-			//printf("%s\n", groups.lgro
+			
+			sleep(1);
+			if (groups.groups != NULL){
+				if (groups.groups[0] != NULL){
+					free(groups.groups[0]);
+				}
+				free(groups.groups);
+			}
+			
 			printf("Done\n");
 		}
 		
@@ -102,9 +111,6 @@ int main(){
 		gspWaitForVBlank();
 	}
 	close(con.socketfd);
-	socExit();
-	gfxExit();
 	
-
 	return 0;
 }

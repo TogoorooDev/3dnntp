@@ -11,6 +11,8 @@
 #define NNTPERR_TIMEOUT			5
 #define NNTPERR_READ			6
 #define NNTPERR_SOCKCONF		7
+#define NNTPERR_POLL			8
+#define NNTPERR_SEND			9
 #define NNTPERR_UNKNOWN 		255
 
 typedef struct{
@@ -25,10 +27,11 @@ typedef struct{
 } nntpres;
 
 typedef struct {
-	u32 size;
+	u16 len;
 	char **groups;
 	char *lgroup;
 	u8 err;
+	int errcode;
 } nntpgroups;
 
 nntpcon nntpinit(char*, u16);

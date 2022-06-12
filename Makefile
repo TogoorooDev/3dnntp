@@ -47,7 +47,9 @@ ROMFS		:=	romfs
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
 CFLAGS	:=	-g -Wall -Wextra -O2 -mword-relocations \
-			-ffunction-sections \
+			-Wnull-dereference -Wuninitialized -Wunused-function \
+			-ffunction-sections -fsanitize=leak \
+			-Werror -Wno-error=unused-variable -Wno-error=unused-function -Wno-error=unused-but-set-variable \
 			$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__
