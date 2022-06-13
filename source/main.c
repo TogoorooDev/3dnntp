@@ -8,8 +8,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <malloc.h>
 #include <unistd.h>
+#include <malloc.h>
 
 #include <3ds.h>
 
