@@ -54,7 +54,7 @@ int main(){
 			if (kDown & KEY_B) {
 				socExitWrapper();
 				gfxExit();
-				return 1;
+				exit(1);
 			}
 		}
 	}
@@ -68,7 +68,7 @@ int main(){
 			if (kDown & KEY_B) {
 				socExitWrapper();
 				gfxExit();
-				return 1;
+				exit(1);
 			}
 		}
 	}
@@ -116,5 +116,5 @@ int main(){
 	}
 	close(con.socketfd);
 	
-	return 0;
+	exit(0);
 }
