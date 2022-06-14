@@ -144,10 +144,6 @@ nntpgroups nntp_get_groups(nntpcon con){
 	fcntl(con.socketfd, F_SETFL, fcntl(con.socketfd, F_GETFL, 0) | O_NONBLOCK);
 	
 	out.groups = malloc(groupsize);
-	if (out.groups == NULL){
-		out.err = NNTPERR_ALLOC;
-		return out;
-	}
 	
 	while ((pollres = poll(watchlist, 1, 5000)) != 0){
 		if (pollres == -1){
@@ -156,12 +152,8 @@ nntpgroups nntp_get_groups(nntpcon con){
 			out.groups = NULL;
 			return out;
 		}
-		printf("Setting memory before call\n");
-		//sleep(3);
-		memset(working, 0, (workingsize - 1));
-		printf("Memory set\n");
-		//sleep(3);
 		
+		//memset(working, 0, (workingsize - 1));
 		recv_res = recv(con.socketfd, working, (workingsize - 1), 0);
 		if (recv_res == -1){
 			printf("Read error\n");
@@ -186,11 +178,9 @@ nntpgroups nntp_get_groups(nntpcon con){
 			
 		}
 		
-		printf("Setting memory after call\n");
-		
 		printf("recv: %d\n", recv_res);
 		
-		strncat(buf, working, bufsize);	
+		strcat(buf, working);	
 		
 		bufpos += recv_res;
 	}
@@ -201,10 +191,6 @@ nntpgroups nntp_get_groups(nntpcon con){
 	//memset(working, 0, strlen(working));
 	buf[bufpos] = '\0';
 	backup_buf = malloc(bufsize + 1);
-	if (backup_buf == NULL){
-		out.err = NNTPERR_ALLOC;
-		return out;
-	}
 	backup_buf_size = bufsize;
 	
 	wpos = 0;
@@ -213,10 +199,10 @@ nntpgroups nntp_get_groups(nntpcon con){
 	//backup_buf[backup_buf_size - 1] = '\0';
 	out.len = 0;
 	u32 endpos;
+	last_buf = malloc(bufsize);
+	
 	
 	while((endpos = strcspn(buf, "\n")) != 0){
-		printf("Endpos: %ld\n", endpos);
-		
 		strncpy(working, buf, workingsize - 1);
 		printf("Copied working to buf: %ld\n", workingsize);
 		sleep(3);
@@ -229,25 +215,7 @@ nntpgroups nntp_get_groups(nntpcon con){
 		printf("Copied working to groups\n");
 		sleep(3);
 		
-		//memmove(buf, buf + endpos, bufsize - endpos);
-		
-		char *temp = malloc(bufsize);
-		if (temp == NULL){
-			out.err = NNTPERR_ALLOC;
-			return out;
-		}
-		temp = memcpy(temp, "q", 1);
-		
-		printf("Allocated temporary buffer\n");
-		sleep(3);
-		buf = memcpy(buf, temp, bufsize);
-		if (buf == NULL){
-			out.err = NNTPERR_ALLOC;
-			return out;
-		}
-		free(temp);
-		printf("Copied back into buf\n");
-		
+		memmove(buf, buf + endpos, bufsize - (endpos + 1));
 		printf("Moved memory thank fucking god.\n");
 		sleep(3);
 		
