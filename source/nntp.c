@@ -113,9 +113,8 @@ nntpgroups nntp_get_groups(nntpcon con){
 	out.groups = NULL;
 	out.len = 0;
 	
-	u32 workingsize = sizeof(char) * 65534;
-	u32 workinginit = workingsize;
-	char *working = malloc(workingsize);
+	u32 workingsize;
+	char *working;
 	u32 wpos = 0;
 	
 	u64 bufsize = sizeof(char) * 65534;
@@ -160,9 +159,11 @@ nntpgroups nntp_get_groups(nntpcon con){
 			if (buf == NULL){
 				out.err = NNTPERR_ALLOC;
 				free(last_buf);
-				free(working);
 				free(out.groups);
 				out.groups = NULL;
+				
+				printf(".");
+				fflush(stdout);
 				
 				return out;
 			}
@@ -176,12 +177,12 @@ nntpgroups nntp_get_groups(nntpcon con){
 			out.errcode = errno;
 			return out;
 		}
+		bufpos += recv_res;
 	}
 	
 	printf("Got\n");
 	sleep(2);
-	//free(working);
-	//memset(working, 0, strlen(working));
+	
 	buf[bufpos] = '\0';
 	backup_buf = malloc(bufsize + 1);
 	backup_buf_size = bufsize;
@@ -192,63 +193,25 @@ nntpgroups nntp_get_groups(nntpcon con){
 	//backup_buf[backup_buf_size - 1] = '\0';
 	out.len = 0;
 	u32 endpos;
-	last_buf = malloc(bufsize);
 	
-	
-	while((endpos = strcspn(buf, "\n")) != 0){
-		strncpy(working, buf, workingsize - 1);
-		printf("Copied working to buf: %ld\n", workingsize);
-		sleep(3);
+	working = strtok(buf, "\n");
+	while (working != NULL){
+		out.groups[wpos] = malloc(strlen(working) + 1);
+		working[strlen(working)] = '\0';
+		last_buf = memcpy(out.groups[wpos], working, strlen(working) + 1);
+		if (last_buf == NULL){
+			out.err = NNTPERR_MEM;
+			return out;
+		}
 		
-		working[workingsize - 1] = '\0';
-		printf("added null byte to working\n");
-		sleep(3);
-		
-		strncpy(out.groups[out.len], working, workingsize);
-		printf("Copied working to groups\n");
-		sleep(3);
-		
-		memmove(buf, buf + endpos, bufsize - (endpos + 1));
-		printf("Moved memory thank fucking god.\n");
-		sleep(3);
-		
+		wpos++;
+		working = strtok(NULL, "\n");
 	}
-	
-	// while ((endpos = strcspn(buf, "\n")) != strlen(buf)){
-		
-		// strncpy(working, buf, workingsize);
-		// printf("Copied buf to working\n");
-		// sleep(3);
-		// working[endpos - 1] = '\0';
-		// printf("Modified working\n");
-		// sleep(3);
-		// u16 spacepos;
-		// strncpy(out.groups[out.len], working, workingsize);
-		// printf("Copied working to groups\n");
-		// sleep(3);
-		// if ((spacepos = strcspn(working, " ")) != strlen(working)){
-			// out.len++;
-			// working[spacepos] = '\0';
-			// strcpy(out.groups[out.len - 1], working);
-			// continue;
-		// }
-		
-		
-		// last_buf = buf;
-		// buf = memmove(buf, buf + endpos, bufsize - (endpos + 1));
-		// if (buf == NULL){
-			// out.err = NNTPERR_ALLOC;
-			// free(buf);
-			// free(working);
-			// free(backup_buf);
-			// return out
-		// }
-		// printf("Resized buf\n");
-		// sleep(3);
-	// }
-	
+
+	out.len = wpos;
+
 	free(buf);
-	free(working);
+	//free(thaiboy);
 	out.err = NNTPERR_OK;
 	return out;
 }
