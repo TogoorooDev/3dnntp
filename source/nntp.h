@@ -13,6 +13,7 @@
 #define NNTPERR_SOCKCONF		7
 #define NNTPERR_POLL			8
 #define NNTPERR_SEND			9
+#define NNTPERR_MEM				10
 #define NNTPERR_UNKNOWN 		255
 
 typedef struct{

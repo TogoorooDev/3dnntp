@@ -152,9 +152,23 @@ nntpgroups nntp_get_groups(nntpcon con){
 			out.groups = NULL;
 			return out;
 		}
+		last_buf = buf;
 		
-		//memset(working, 0, (workingsize - 1));
-		recv_res = recv(con.socketfd, working, (workingsize - 1), 0);
+		if ((bufsize - bufpos) < 8192){
+			bufsize += 8192;
+			buf = realloc(buf, bufsize);
+			if (buf == NULL){
+				out.err = NNTPERR_ALLOC;
+				free(last_buf);
+				free(working);
+				free(out.groups);
+				out.groups = NULL;
+				
+				return out;
+			}
+		}
+		
+		recv_res = recv(con.socketfd, buf + bufpos, bufsize - bufpos, 0);
 		if (recv_res == -1){
 			printf("Read error\n");
 			out.groups = NULL;
@@ -162,27 +176,6 @@ nntpgroups nntp_get_groups(nntpcon con){
 			out.errcode = errno;
 			return out;
 		}
-		
-		working[recv_res] = '\0';
-		if ((bufsize + recv_res) >= bufsize) {
-			last_buf = buf;
-			buf = realloc(buf, bufsize + recv_res);
-			if (buf == NULL){
-				out.err = NNTPERR_ALLOC;
-				free(working);
-				free(last_buf);
-				return out;
-			}
-			bufsize += recv_res + 1;
-			printf("bufsize: %lld\n", bufsize);
-			
-		}
-		
-		printf("recv: %d\n", recv_res);
-		
-		strcat(buf, working);	
-		
-		bufpos += recv_res;
 	}
 	
 	printf("Got\n");

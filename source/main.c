@@ -116,5 +116,5 @@ int main(){
 	}
 	close(con.socketfd);
 	
-	return 0;
+	exit(0);
 }
