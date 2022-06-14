@@ -46,14 +46,13 @@ ROMFS		:=	romfs
 #---------------------------------------------------------------------------------
 ARCH	:=	-march=armv6k -mtune=mpcore -mfloat-abi=hard -mtp=soft
 
-CFLAGS	:=	-Wall -Wextra -mword-relocations \
+CFLAGS	:=	-Wall -Wextra -O2 -mword-relocations \
 			-Wnull-dereference -Wuninitialized -Wunused-function \
 			-ffunction-sections -fsanitize=leak \
 			-Werror \
-			#-O2 \
 			$(ARCH)
 
-CFLAGS += -Wno-error=unused-variable -Wno-error=unused-function -Wno-error=unused-but-set-variable -g -ggdb -O0
+CFLAGS += -g -Wno-error=unused-variable -Wno-error=unused-function -Wno-error=unused-but-set-variable
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__
 
