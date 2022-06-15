@@ -18,8 +18,6 @@ typedef struct {
 	u8 err;
 } splitres;
 
-splitres util_split_by_newline(char*);
-
-char *rtrim(char*, const char*);
+char recursiveFree(char**, unsigned int);
 
 #endif

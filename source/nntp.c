@@ -113,12 +113,9 @@ nntpgroups nntp_get_groups(nntpcon con){
 	out.groups = NULL;
 	out.len = 0;
 	
-	u32 workingsize;
 	char *working;
-	u32 wpos = 0;
 	
-	u64 bufsize = sizeof(char) * 65534;
-	u32 bufinit = bufsize;
+	u64 bufsize = 8192;
 	char *buf = malloc(bufsize);
 	u32 bufpos = 0;
 	char *last_buf;
@@ -127,7 +124,6 @@ nntpgroups nntp_get_groups(nntpcon con){
 	char *backup_buf;
 	
 	u32 groupsize = sizeof(char*) * 65534;
-	u32 grouppos = 0;
 	
 	int recv_res = 0;
 	
@@ -146,7 +142,7 @@ nntpgroups nntp_get_groups(nntpcon con){
 	
 	while ((pollres = poll(watchlist, 1, 5000)) != 0){
 		if (pollres == -1){
-			printf("Poll error\n");
+			//printf("Poll error\n");
 			out.err = NNTPERR_POLL;
 			out.groups = NULL;
 			return out;
@@ -180,35 +176,51 @@ nntpgroups nntp_get_groups(nntpcon con){
 		bufpos += recv_res;
 	}
 	
-	printf("Got\n");
-	sleep(2);
+	printf("\n");
 	
 	buf[bufpos] = '\0';
 	backup_buf = malloc(bufsize + 1);
 	backup_buf_size = bufsize;
 	
-	wpos = 0;
-	
 	strncpy(backup_buf, buf, backup_buf_size);
 	//backup_buf[backup_buf_size - 1] = '\0';
 	out.len = 0;
-	u32 endpos;
 	
 	working = strtok(buf, "\n");
 	while (working != NULL){
-		out.groups[wpos] = malloc(strlen(working) + 1);
+		out.groups[out.len] = malloc(strlen(working) + 1);
 		working[strlen(working)] = '\0';
-		last_buf = memcpy(out.groups[wpos], working, strlen(working) + 1);
+		last_buf = memcpy(out.groups[out.len], working, strlen(working) + 1);
 		if (last_buf == NULL){
 			out.err = NNTPERR_MEM;
 			return out;
 		}
 		
-		wpos++;
+		out.len++;
 		working = strtok(NULL, "\n");
 	}
+	
+	for (u32 i = 0; i < out.len; i++){
+		char *new;
+		new = strtok(out.groups[i], " ");
+		
+		if (new == NULL) continue;
+		
+		// printf("%d", strlen(new));
+		
+		out.groups[i][strlen(new)] = '\0';
+		
+		memset(out.groups[i], 0, strlen(out.groups[i]));
+		strcpy(out.groups[i], new);
+		
+		/*out.groups[i] = realloc(out.groups[i], strlen(new) + 1);
+		if (o == NULL){
+			out.err = NNTPERR_ALLOC;
+			return out;
+		}*/
 
-	out.len = wpos;
+		free(new);
+	}
 
 	free(buf);
 	//free(thaiboy);

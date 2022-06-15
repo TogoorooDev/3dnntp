@@ -14,6 +14,7 @@
 #include <3ds.h>
 
 #include "nntp.h"
+#include "util.h"
 
 #define SCREEN_WIDTH  400
 #define SCREEN_HEIGHT 240
@@ -22,6 +23,7 @@
 #define SOC_BUF_ALIGN 	0x1000
 
 static u32 *SOC_buf = NULL;
+static nntpgroups groupdata;
 
 void socExitWrapper(){
 	printf("exiting...\n");
@@ -90,22 +92,15 @@ int main(){
 		if (kDown & KEY_START) break;
 		if (kDown & KEY_A) {
 			printf("Finding available groups\n");
-			nntpgroups groups = nntp_get_groups(con);
-			if (groups.err != NNTPERR_OK){
-				printf("Error: %d\n", groups.err);
-				if (groups.err == NNTPERR_READ) printf("Errno: %d\n", groups.errcode);
+			groupdata = nntp_get_groups(con);
+			if (groupdata.err != NNTPERR_OK){
+				printf("Error: %d\n", groupdata.err);
+				if (groupdata.err == NNTPERR_READ) printf("Errno: %d\n", groupdata.errcode);
 			}
 			
-			printf("Found %ld groups\n", groups.len);
-			
-			sleep(1);
-			if (groups.groups != NULL){
-				for(u32 i = 0; i < groups.len; i++){
-					if (groups.groups[i] != NULL) free(groups.groups[i]);
-				}
-				free(groups.groups);
-			}
-			
+			printf("Found %ld groups\n", groupdata.len);
+			printf("Group (%d chars) 0: %s\n", strlen(groupdata.groups[0]), groupdata.groups[0]);
+		
 			printf("Done\n");
 		}
 		
