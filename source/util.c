@@ -6,7 +6,7 @@
 char recursiveFree(char **in, unsigned int len){
 	if (in != NULL){
 		for(u32 i = 0; i < len; i++){
-			if (in[i] != NULL) free(in[i]);
+			safefree(in[i]);
 		}
 		free(in);
 		return 0;

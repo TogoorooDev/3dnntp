@@ -85,6 +85,12 @@ int main(){
 		printf("Connection Error\nError Code: %d\n", con.err);
 	}
 	
+	groupdata = nntp_get_groups(con);
+	if (groupdata.err != NNTPERR_OK){
+		printf("Error: %d\n", groupdata.err);
+		if (groupdata.err == NNTPERR_READ) printf("Errno: %d\n", groupdata.errcode);
+	}
+	
 	while (aptMainLoop()){
 		hidScanInput();
 		u32 kDown = hidKeysDown();
@@ -92,14 +98,7 @@ int main(){
 		if (kDown & KEY_START) break;
 		if (kDown & KEY_A) {
 			printf("Finding available groups\n");
-			groupdata = nntp_get_groups(con);
-			if (groupdata.err != NNTPERR_OK){
-				printf("Error: %d\n", groupdata.err);
-				if (groupdata.err == NNTPERR_READ) printf("Errno: %d\n", groupdata.errcode);
-			}
 			
-			printf("Found %ld groups\n", groupdata.len);
-			printf("Group (%d chars) 0: %s\n", strlen(groupdata.groups[0]), groupdata.groups[0]);
 		
 			printf("Done\n");
 		}
@@ -109,7 +108,9 @@ int main(){
 		
 		gspWaitForVBlank();
 	}
+	
 	close(con.socketfd);
+	recursiveFree(groupdata.groups, groupdata.len);
 	
 	exit(0);
 }

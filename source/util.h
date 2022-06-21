@@ -7,6 +7,8 @@
 #define GENERR_ALLOC 	1;
 #define GENERR_UNKNOWN 	255;
 
+#define safefree (in) if ((in) != NULL) free(in)
+
 typedef struct {
 	void *res;
 	u8 err;

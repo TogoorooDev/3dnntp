@@ -188,7 +188,7 @@ nntpgroups nntp_get_groups(nntpcon con){
 	
 	working = strtok(buf, "\n");
 	while (working != NULL){
-		out.groups[out.len] = malloc(strlen(working) + 1);
+		out.groups[out.len] = calloc(sizeof(char), strlen(working) + 1);
 		working[strlen(working)] = '\0';
 		last_buf = memcpy(out.groups[out.len], working, strlen(working) + 1);
 		if (last_buf == NULL){
@@ -204,26 +204,68 @@ nntpgroups nntp_get_groups(nntpcon con){
 		char *new;
 		new = strtok(out.groups[i], " ");
 		
-		if (new == NULL) continue;
+		if (new == NULL) {
+			printf("new == NULL\n");
+			printf("new = %s\n", out.groups[i]);
+			continue;
+		}
+		
+		//printf("new = %s\n", new);
 		
 		// printf("%d", strlen(new));
 		
-		out.groups[i][strlen(new)] = '\0';
+		//out.groups[i][strlen(new)] = '\0';
 		
-		memset(out.groups[i], 0, strlen(out.groups[i]));
-		strcpy(out.groups[i], new);
-		
-		/*out.groups[i] = realloc(out.groups[i], strlen(new) + 1);
-		if (o == NULL){
-			out.err = NNTPERR_ALLOC;
-			return out;
-		}*/
-
-		free(new);
+		//memset(out.groups[i], 0, strlen(out.groups[i]));
+		out.groups[i] = strcpy(out.groups[i], new);
+		//printf("%s\n", out.groups[i]);
+		// out.groups[i] = realloc(out.groups[i], strlen(new) + 1);
+		// if (o == NULL){
+			// out.err = NNTPERR_ALLOC;
+			// return out;
+		// }
 	}
 
 	free(buf);
 	//free(thaiboy);
 	out.err = NNTPERR_OK;
+	return out;
+}
+
+u8 nntp_group_select(char *group, nntpcon con){
+	u8 out = NNTPERR_UNKNOWN;
+	u16 recv_res;
+	char *buf = malloc(8192);
+	u16 bufpos;
+	
+	while ((pollres = poll(watchlist, 1, 5000)) != 0){
+		if (pollres == -1){
+			out = NNTPERR_POLL;
+			return out;
+		}
+		last_buf = buf;
+		
+		if ((bufsize - bufpos) < 8192){
+			bufsize += 8192;
+			buf = realloc(buf, bufsize);
+			if (buf == NULL){
+				out.err = NNTPERR_ALLOC;
+				free(last_buf);
+
+				return out;
+			}
+		}
+		
+		recv_res = recv(con.socketfd, buf + bufpos, bufsize - bufpos, 0);
+		if (recv_res == -1){
+			printf("Read error\n");
+			out = NNTPERR_READ;
+			return out;
+		}
+		bufpos += recv_res;
+	}
+	
+	
+	
 	return out;
 }
