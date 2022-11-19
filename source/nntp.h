@@ -17,15 +17,35 @@
 
 #define NNTPERR_UNKNOWN 		255
 
+typedef struct {
+	char *str;
+	u8 err;
+} nntpstr;
+
+typedef struct{
+	char *article;
+	u16 len;
+	
+} nntparticle;
+
+typedef struct{
+	nntparticle *news;
+	u16 len;
+	u8 err;
+	
+} nntpnews;
+
 typedef struct{
 	int socketfd;
 	u8 err;
+	
 } nntpcon;
 
 typedef struct{
 	u32 size;
 	char *contents;
 	u8 err;
+	
 } nntpres;
 
 typedef struct {
@@ -34,11 +54,13 @@ typedef struct {
 	char *lgroup;
 	u8 err;
 	int errcode;
+	
 } nntpgroups;
 
 nntpcon nntpinit(char*, u16);
 nntpres nntp_custom_command(char*, nntpcon);
 nntpgroups nntp_get_groups(nntpcon con);
+nntpstr nntp_find_groups(char*, u16, nntpgroups);
 
 //#include "nntp.c"
 

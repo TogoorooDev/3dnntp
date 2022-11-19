@@ -7,7 +7,7 @@
 #define GENERR_ALLOC 	1;
 #define GENERR_UNKNOWN 	255;
 
-#define safefree (in) if ((in) != NULL) free(in)
+//#define safefree (in) (if ((in) != NULL) free(in))
 
 typedef struct {
 	void *res;
@@ -21,5 +21,7 @@ typedef struct {
 } splitres;
 
 char recursiveFree(char**, unsigned int);
+
+//u8 safefree(void*);
 
 #endif

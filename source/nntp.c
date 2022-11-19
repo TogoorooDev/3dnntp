@@ -19,6 +19,22 @@
 #include "nntp.h"
 //#include "util.h"
 
+nntpstr nntp_find_groups(char *startswith, u16 level, nntpgroups groupslist){
+	nntpstr out;
+	out.err = NNTPERR_UNKNOWN;
+	
+	char *checker = NULL;
+
+	for (u32 i = 0; i < groupslist.len; i++){
+		checker = strstr(groupslist.groups[i], startswith);
+		if (strcmp(checker, startswith) == 0){
+			printf(groupslist.groups[i]);
+		} 
+	}
+
+	return out;
+}
+
 nntpcon nntpinit(char *server, u16 port){
 	struct sockaddr_in addr;
 	int sock, pollres, recv_res;
@@ -75,36 +91,6 @@ nntpcon nntpinit(char *server, u16 port){
 	return con;
 	
 }
-
-/* nntpres nntp_custom_command(char *msg, nntpcon con){
-	// nntpres out;
-	// out.err = NNTPERR_UNKNOWN;
-	// out.contents = NULL;
-	// char *buf = malloc(128);
-	// u32 size = 0;
-	// u32 buf_size = 126;
-	// u32 last_read_size = 0;
-	
-	// out.err = send(con.socketfd, msg, strlen(msg), 0);
-	
-	// while ((last_read_size = recv(con.socketfd, buf, 126, 0))  > 0){
-		// size += last_read_size;
-		// buf_size = size + 126;
-		// buf = realloc(buf, buf_size);
-	// }
-	
-	// out.contents = malloc(size + 1);
-	// strcpy(out.contents, buf);
-	// free(buf);
-	// if (out.contents == NULL){
-		// out.err = NNTPERR_ALLOC;
-		// return out;
-	// }
-	
-	// out.err = NNTPERR_OK;
-	// return out;
-	
-// } */
 
 
 nntpgroups nntp_get_groups(nntpcon con){
@@ -234,9 +220,31 @@ nntpgroups nntp_get_groups(nntpcon con){
 
 u8 nntp_group_select(char *group, nntpcon con){
 	u8 out = NNTPERR_UNKNOWN;
-	u16 recv_res;
-	char *buf = malloc(8192);
-	u16 bufpos;
+	int recv_res;
+	
+	char *working;
+	
+	u64 bufsize = 8192;
+	char *buf = malloc(bufsize);
+	u32 bufpos = 0;
+	char *last_buf;
+	
+	u64 backup_buf_size;
+	char *backup_buf;
+	
+	int pollres;
+	struct pollfd watchlist[1];
+	watchlist[0].fd = con.socketfd;
+	watchlist[0].events = POLLIN;
+	
+	fcntl(con.socketfd, F_SETFL, fcntl(con.socketfd, F_GETFL, 0) & ~O_NONBLOCK);
+	
+	char *g = calloc(strlen(group) + strlen("GROUP ") + 1, sizeof(char*));
+	sprintf(g, "GROUP %s\n", group);
+	
+	send(con.socketfd, "S\r\n", strlen(g) + 1, 0);
+	
+	fcntl(con.socketfd, F_SETFL, fcntl(con.socketfd, F_GETFL, 0) | O_NONBLOCK);
 	
 	while ((pollres = poll(watchlist, 1, 5000)) != 0){
 		if (pollres == -1){
@@ -249,7 +257,7 @@ u8 nntp_group_select(char *group, nntpcon con){
 			bufsize += 8192;
 			buf = realloc(buf, bufsize);
 			if (buf == NULL){
-				out.err = NNTPERR_ALLOC;
+				out = NNTPERR_ALLOC;
 				free(last_buf);
 
 				return out;
@@ -265,7 +273,107 @@ u8 nntp_group_select(char *group, nntpcon con){
 		bufpos += recv_res;
 	}
 	
+	return out;
+}
+
+nntpnews nntp_get_news(nntpcon con){
+	nntpnews out;
+	out.err = NNTPERR_UNKNOWN;
+	out.news = NULL;
+	out.len = 0;
 	
+	char *working;
+	
+	u64 bufsize = 8192;
+	char *buf = malloc(bufsize);
+	u32 bufpos = 0;
+	char *last_buf;
+	
+	u64 backup_buf_size;
+	char *backup_buf;
+	
+	u32 newssize = sizeof(char*) * 65534;
+	
+	int recv_res = 0;
+	
+	int pollres;
+	struct pollfd watchlist[1];
+	watchlist[0].fd = con.socketfd;
+	watchlist[0].events = POLLIN;
+	
+	fcntl(con.socketfd, F_SETFL, fcntl(con.socketfd, F_GETFL, 0) & ~O_NONBLOCK);
+	
+	send(con.socketfd, "NEWNEWS * 220829 043300\r\n", strlen("NEWNEWS * 220829 043300\r\n") + 1, 0);
+	
+	fcntl(con.socketfd, F_SETFL, fcntl(con.socketfd, F_GETFL, 0) | O_NONBLOCK);
+	
+	//out.news = malloc(groupsize);
+	
+	out.news = calloc(sizeof(nntparticle), 65534);
+	
+	while ((pollres = poll(watchlist, 1, 5000)) != 0){
+		if (pollres == -1){
+			//printf("Poll error\n");
+			out.err = NNTPERR_POLL;
+			out.news = NULL;
+			return out;
+		}
+		last_buf = buf;
+		
+		if ((bufsize - bufpos) < 8192){
+			bufsize += 8192;
+			buf = realloc(buf, bufsize);
+			if (buf == NULL){
+				out.err = NNTPERR_ALLOC;
+				free(last_buf);
+				free(out.news);
+				
+				
+				printf(".");
+				fflush(stdout);
+				
+				return out;
+			}
+		}
+		
+		recv_res = recv(con.socketfd, buf + bufpos, bufsize - bufpos, 0);
+		if (recv_res == -1){
+			printf("Read error\n");
+			out.news = NULL;
+			out.err = NNTPERR_READ;
+			return out;
+		}
+		bufpos += recv_res;
+	}
+	
+	printf("\n");
+	
+	buf[bufpos] = '\0';
+	backup_buf = malloc(bufsize + 1);
+	backup_buf_size = bufsize;
+	
+	strncpy(backup_buf, buf, backup_buf_size);
+	//backup_buf[backup_buf_size - 1] = '\0';
+	out.len = 0;
+	
+	working = strtok(buf, "\n");
+	while (working != NULL){
+		out.news[out.len].article = calloc(sizeof(char), strlen(working) + 1);
+		working[strlen(working)] = '\0';
+		last_buf = memcpy(out.news[out.len].article, working, strlen(working) + 1);
+		if (last_buf == NULL){
+			out.err = NNTPERR_MEM;
+			return out;
+		}
+		
+		out.news[out.len].len = strlen(working) + 1;
+		
+		out.len++;
+		working = strtok(NULL, "\n");
+	}
+
+	free(buf);
+	out.err = NNTPERR_OK;
 	
 	return out;
 }

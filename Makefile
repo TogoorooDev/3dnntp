@@ -52,7 +52,7 @@ CFLAGS	:=	-Wall -Wextra -O2 -mword-relocations \
 			-Werror \
 			$(ARCH)
 
-CFLAGS += -g -Wno-error=unused-variable -Wno-error=unused-function -Wno-error=unused-but-set-variable
+CFLAGS += -g -Wno-error=unused-variable -Wno-error=unused-function -Wno-error=unused-but-set-variable -Wno-error=unused-parameter
 
 CFLAGS	+=	$(INCLUDE) -D__3DS__
 

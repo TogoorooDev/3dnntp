@@ -97,10 +97,8 @@ int main(){
 		
 		if (kDown & KEY_START) break;
 		if (kDown & KEY_A) {
-			printf("Finding available groups\n");
-			
-		
-			printf("Done\n");
+
+			nntp_find_groups("alt", 1, groupdata);
 		}
 		
 		gfxFlushBuffers();
