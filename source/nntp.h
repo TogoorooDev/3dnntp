@@ -18,6 +18,11 @@
 #define NNTPERR_UNKNOWN 		255
 
 typedef struct {
+	char **strs;
+	u8 err;
+} nntpstrarray;
+
+typedef struct {
 	char *str;
 	u8 err;
 } nntpstr;
@@ -60,7 +65,7 @@ typedef struct {
 nntpcon nntpinit(char*, u16);
 nntpres nntp_custom_command(char*, nntpcon);
 nntpgroups nntp_get_groups(nntpcon con);
-nntpstr nntp_find_groups(char*, u16, nntpgroups);
+nntpgroups nntp_find_groups(char*, u16, nntpgroups);
 
 //#include "nntp.c"
 

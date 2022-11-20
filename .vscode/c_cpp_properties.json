@@ -20,7 +20,8 @@
             "name": "3ds",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:\\devkitPro\\libctru\\**"
+                "C:\\devkitPro\\libctru\\**",
+                "C:/devkitPro/libctru/"
             ],
             "defines": [
                 "_DEBUG",

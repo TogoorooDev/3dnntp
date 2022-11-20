@@ -17,23 +17,7 @@
 #include <3ds.h>
 
 #include "nntp.h"
-//#include "util.h"
-
-nntpstr nntp_find_groups(char *startswith, u16 level, nntpgroups groupslist){
-	nntpstr out;
-	out.err = NNTPERR_UNKNOWN;
-	
-	char *checker = NULL;
-
-	for (u32 i = 0; i < groupslist.len; i++){
-		checker = strstr(groupslist.groups[i], startswith);
-		if (strcmp(checker, startswith) == 0){
-			printf(groupslist.groups[i]);
-		} 
-	}
-
-	return out;
-}
+#include "util.h"
 
 nntpcon nntpinit(char *server, u16 port){
 	struct sockaddr_in addr;
@@ -91,7 +75,6 @@ nntpcon nntpinit(char *server, u16 port){
 	return con;
 	
 }
-
 
 nntpgroups nntp_get_groups(nntpcon con){
 	nntpgroups out;
@@ -217,6 +200,66 @@ nntpgroups nntp_get_groups(nntpcon con){
 	out.err = NNTPERR_OK;
 	return out;
 }
+
+
+nntpgroups nntp_find_groups(char *group, u16 level, nntpgroups groupslist){
+	nntpgroups out;
+	out.err = NNTPERR_UNKNOWN;
+	out.groups = malloc(sizeof(char*) * 32);
+	u8 left = 32;
+
+	for(u32 i = 0; i < groupslist.len; i++){
+		char **tempbuf = calloc(48, sizeof(char*));
+		if (left == 0){
+			out.groups = realloc(out.groups, sizeof(out.groups) + 32);
+			left += 32;
+		}
+
+		puts(groupslist.groups[i]);
+
+		char *pch;
+		pch = strtok(groupslist.groups[i], ".");
+		while (pch != NULL){
+			puts("About to say something...");
+			printf("%s\n", pch);
+			sleep(5);
+			puts("Done!!!");
+		}
+
+		left--;
+	}	
+
+	return out;
+}
+
+// nntpstrarray nntp_find_groups(char *group, u16 level, nntpgroups groupslist){
+// 	nntpstrarray out;
+// 	out.err = NNTPERR_UNKNOWN;
+// 	out.strs = calloc(groupslist.len, sizeof (char*));
+// 	u32 iitr = 0;
+	
+// 	for (u32 i = 0; i < groupslist.len; i++){
+// 		char *chars[strlen(groupslist.groups[i])];
+		
+// 		u16 itr = 0;
+// 		char *pch;
+// 		pch = strtok(groupslist.groups[i], ".");
+// 		while (pch != NULL){
+// 			chars[itr] = calloc(strlen(pch), sizeof(char));
+// 			strcpy(chars[itr], pch);
+// 			itr++;
+// 			pch = strtok(NULL, ".");
+// 		}
+
+// 		if (strcmp(group, chars[level]) == 0){
+// 			out.strs[iitr] = calloc(strlen(groupslist.groups[i]), sizeof(char));
+// 			strcpy(out.strs[iitr], groupslist.groups[i]);
+// 			puts(out.strs[iitr]);
+// 		}
+// 	}
+
+// 	return out;
+// }
 
 u8 nntp_group_select(char *group, nntpcon con){
 	u8 out = NNTPERR_UNKNOWN;

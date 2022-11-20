@@ -21,7 +21,7 @@ typedef struct {
 } splitres;
 
 char recursiveFree(char**, unsigned int);
-
+// char in_array(void *, void**, u64);
 //u8 safefree(void*);
 
 #endif

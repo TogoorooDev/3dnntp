@@ -85,12 +85,16 @@ int main(){
 		printf("Connection Error\nError Code: %d\n", con.err);
 	}
 	
+	puts("Getting group data");
+
 	groupdata = nntp_get_groups(con);
 	if (groupdata.err != NNTPERR_OK){
 		printf("Error: %d\n", groupdata.err);
 		if (groupdata.err == NNTPERR_READ) printf("Errno: %d\n", groupdata.errcode);
 	}
 	
+	puts("Group data recieved");
+
 	while (aptMainLoop()){
 		hidScanInput();
 		u32 kDown = hidKeysDown();

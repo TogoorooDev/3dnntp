@@ -19,3 +19,11 @@ char recursiveFree(char **in, unsigned int len){
 void safefree(void *in){
 	if (in != NULL) free(in);
 }
+
+// char in_array(void * in, void** arr, unsigned long len){
+// 	for (unsigned long i = 0; i < len; i++){
+// 		if (memcmp(in, arr[i], sizeof(in)) == 0) return true;
+// 	}
+
+// 	return false;
+// }
